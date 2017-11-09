@@ -77,8 +77,7 @@ public class Client extends JFrame implements ActionListener, WindowListener{
 					// Send the data to the server
 					if ((!id.getText().equals("")) && (id.getText().matches("[0-9]+")) && (!mod.getText().equals(""))){
 						toServer.writeInt(Integer.parseInt(id.getText()));
-						toServer.writeUTF(mod.getText()); 
-						toServer.flush();
+						toServer.writeUTF(mod.getText());
 
 						int check = fromServer.readInt();
 						if(!(check== -1)) {
@@ -113,9 +112,8 @@ public class Client extends JFrame implements ActionListener, WindowListener{
 	@Override
 	public void windowClosing(WindowEvent e) {
 		try {
-			toServer.close();
-			fromServer.close();
-			socket.close();
+			if(socket != null)
+				socket.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}

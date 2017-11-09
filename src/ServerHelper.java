@@ -55,11 +55,24 @@ public class ServerHelper extends Thread{
 			toClient.writeUTF(welcomeMessage);
 			toClient.flush();
 
-			while (fromClient.available() >0) {
+			while (true) {
 				// store id and module details sent from client
 				int id = fromClient.readInt();
 				String module = fromClient.readUTF();
-				
+
+				if (isMatch(id, module)) {
+					toClient.writeInt(rs.getInt("STUD_ID"));
+					toClient.writeUTF(FIRST_NAME);
+					toClient.writeUTF(LAST_NAME);
+					toClient.writeUTF(module);
+					toClient.writeFloat(CA_MARK);
+					toClient.writeFloat(EXAM_MARK);
+					toClient.writeFloat(FINAL_MARK);
+					toClient.flush();
+					System.out.println("found");
+				}
+
+
 				//Get data if a match is found
 				if(id==TESTID && module.equals(MODULE)) {
 					toClient.writeInt(id);
@@ -80,6 +93,34 @@ public class ServerHelper extends Thread{
 		}
 	}
 
+	protected void finalize(){
+		try {
+			this.socket.close();
+		} catch (IOException e) {
+			System.out.println("Could not close socket");
+			System.exit(-1);
+		}
+	}
+
+	private boolean isMatch(int id, String module) throws SQLException {
+		// Initialize ResultSet
+		s = conn.createStatement();
+		s.executeQuery("SELECT * FROM modulegrades WHERE STUD_ID='"+ id +"' and ModuleName='"+module+"'");
+		rs = s.getResultSet();
+
+		if(rs.next()) return true;
+		else return false;
+	}
+
+	private ResultSet queryStudents(int id) throws SQLException {
+		ResultSet set = null;
+		s = conn.createStatement();
+		s.executeQuery("SELECT * FROM students WHERE STUD_ID='"+ id);
+		set = s.getResultSet();
+		
+		return set;
+	}
+
 	// Connect to database
 	private void connect() throws SQLException {
 		try {
@@ -90,10 +131,6 @@ public class ServerHelper extends Thread{
 			e.printStackTrace();
 			return;
 		}
-		// Initialize ResultSet
-		s = conn.createStatement();
-		s.executeQuery("SELECT * FROM " + "modulegrades");
-		rs = s.getResultSet();
 	}
 
 	// Establish a connection with database
