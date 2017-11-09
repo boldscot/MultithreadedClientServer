@@ -55,14 +55,12 @@ public class ServerHelper extends Thread{
 			toClient.writeUTF(welcomeMessage);
 			toClient.flush();
 
-			while (true) {
-				int id = -1;
-				String module = "";
-				id = fromClient.readInt();
-				System.out.println(id);
-				module = fromClient.readUTF();
-				System.out.println(module);
-
+			while (fromClient.available() >0) {
+				// store id and module details sent from client
+				int id = fromClient.readInt();
+				String module = fromClient.readUTF();
+				
+				//Get data if a match is found
 				if(id==TESTID && module.equals(MODULE)) {
 					toClient.writeInt(id);
 					toClient.writeUTF(FIRST_NAME);

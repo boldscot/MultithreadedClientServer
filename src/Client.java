@@ -6,7 +6,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class Client extends JFrame implements ActionListener{
+public class Client extends JFrame implements ActionListener, WindowListener{
 	// Text field for receiving results
 	private JTextField jtf = new JTextField();
 	// Text area to display contents
@@ -50,6 +50,7 @@ public class Client extends JFrame implements ActionListener{
 		setSize(500, 300);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true); // It is necessary to show the frame here!
+		addWindowListener(this); 
 
 		try {
 			// Create a socket to connect to the server
@@ -74,7 +75,7 @@ public class Client extends JFrame implements ActionListener{
 			try {
 				if(toServer != null) {
 					// Send the data to the server
-					if ((!id.getText().equals("")) && (id.getText().matches("[0-9]+")) && (!mod.getText().equals(""))){ //regex for digits only
+					if ((!id.getText().equals("")) && (id.getText().matches("[0-9]+")) && (!mod.getText().equals(""))){
 						toServer.writeInt(Integer.parseInt(id.getText()));
 						toServer.writeUTF(mod.getText()); 
 						toServer.flush();
@@ -101,10 +102,37 @@ public class Client extends JFrame implements ActionListener{
 					jta.append("No connection to server!\n");
 					break;
 				}
-			}catch (IOException e1) {
+			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 			break;
 		}
 	}
+	
+	// Close sockets and streams when closing client window.
+	@Override
+	public void windowClosing(WindowEvent e) {
+		try {
+			toServer.close();
+			fromServer.close();
+			socket.close();
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	/*
+	 * Methods required when implementing window listener but not needed in this program.
+	 */
+	@Override
+	public void windowActivated(WindowEvent e) {}
+	@Override
+	public void windowClosed(WindowEvent e) {}
+	@Override
+	public void windowDeactivated(WindowEvent e) {}
+	@Override
+	public void windowDeiconified(WindowEvent e) {}
+	@Override
+	public void windowIconified(WindowEvent e) {}
+	@Override
+	public void windowOpened(WindowEvent e) {}
 }
