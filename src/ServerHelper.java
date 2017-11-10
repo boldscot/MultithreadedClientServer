@@ -59,18 +59,20 @@ public class ServerHelper extends Thread{
 				// store id and module details sent from client
 				int id = fromClient.readInt();
 				String module = fromClient.readUTF();
+				
+				ResultSet student = getStudent(id);
+				if(student.next())
+					if(isMatch(id, module)) {
+						toClient.writeInt(id);
+						toClient.writeUTF(FIRST_NAME);
+						toClient.writeUTF(LAST_NAME);
+						toClient.writeUTF(module);
+						toClient.writeFloat(CA_MARK);
+						toClient.writeFloat(EXAM_MARK);
+						toClient.writeFloat(FINAL_MARK);
+						toClient.flush();
+					}
 
-				if (isMatch(id, module)) {
-					toClient.writeInt(rs.getInt("STUD_ID"));
-					toClient.writeUTF(FIRST_NAME);
-					toClient.writeUTF(LAST_NAME);
-					toClient.writeUTF(module);
-					toClient.writeFloat(CA_MARK);
-					toClient.writeFloat(EXAM_MARK);
-					toClient.writeFloat(FINAL_MARK);
-					toClient.flush();
-					System.out.println("found");
-				}
 
 
 				//Get data if a match is found
@@ -104,7 +106,6 @@ public class ServerHelper extends Thread{
 
 	private boolean isMatch(int id, String module) throws SQLException {
 		// Initialize ResultSet
-		s = conn.createStatement();
 		s.executeQuery("SELECT * FROM modulegrades WHERE STUD_ID='"+ id +"' and ModuleName='"+module+"'");
 		rs = s.getResultSet();
 
@@ -112,14 +113,18 @@ public class ServerHelper extends Thread{
 		else return false;
 	}
 
-	private ResultSet queryStudents(int id) throws SQLException {
-		ResultSet set = null;
-		s = conn.createStatement();
-		s.executeQuery("SELECT * FROM students WHERE STUD_ID='"+ id);
-		set = s.getResultSet();
+	private ResultSet getStudent(int id) throws SQLException{
+		ResultSet student = null;
+		s.executeQuery("SELECT * FROM students WHERE STUD_ID="+ id);
+		student = s.getResultSet();
 		
-		return set;
+		return student;
 	}
+	
+	private float getOverallGrade(float ca, float exam) {
+		return (30.0f/100.0f * ca) + (70.0f/100.0f * exam);
+	}
+
 
 	// Connect to database
 	private void connect() throws SQLException {
@@ -144,6 +149,8 @@ public class ServerHelper extends Thread{
 						+ this.serverName + ":" 
 						+ this.portNumber + "/" 
 						+ this.dbName, connectionProps);
+		//statement object to run querys on
+		s = conn.createStatement();
 
 		return conn;
 	}
