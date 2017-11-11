@@ -6,16 +6,16 @@ import java.awt.*;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class MultiThreadedServer extends JFrame {
+public class MultiThreadedServerA2 extends JFrame {
 	// Text area for displaying contents
 	private JTextArea jta = new JTextArea();
 	private ServerSocket serverSocket = null;
 
 	public static void main(String[] args) throws IOException {
-		new MultiThreadedServer();
+		new MultiThreadedServerA2();
 	}
 
-	public MultiThreadedServer() throws IOException {
+	public MultiThreadedServerA2() throws IOException {
 		// Place text area on the frame
 		setLayout(new BorderLayout());
 		add(new JScrollPane(jta), BorderLayout.CENTER);

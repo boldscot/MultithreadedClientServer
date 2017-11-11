@@ -22,8 +22,6 @@ public class ServerHelper extends Thread{
 	private final int portNumber = 3306;
 	private final String dbName = "gradedatabase";
 
-	private Statement s = null;
-	private ResultSet rs = null;
 	private Connection conn = null;
 
 	// Fields for testing before database communication
@@ -59,68 +57,69 @@ public class ServerHelper extends Thread{
 				// store id and module details sent from client
 				int id = fromClient.readInt();
 				String module = fromClient.readUTF();
-				
+
 				ResultSet student = getStudent(id);
-				if(student.next())
-					if(isMatch(id, module)) {
+				ResultSet grades = isMatch(id, module);
+
+				if(student != null){
+					if(grades != null) {
+						//Make sure we are at start of result sets
+						student.first();
+						grades.first();
 						toClient.writeInt(id);
-						toClient.writeUTF(FIRST_NAME);
-						toClient.writeUTF(LAST_NAME);
+						toClient.writeUTF(student.getString("FNAME"));
+						toClient.writeUTF(student.getString("SNAME"));
 						toClient.writeUTF(module);
-						toClient.writeFloat(CA_MARK);
-						toClient.writeFloat(EXAM_MARK);
-						toClient.writeFloat(FINAL_MARK);
+						float ca = grades.getFloat("CA_MARK");
+						float ex = grades.getFloat("EXAM_MARK");
+						toClient.writeFloat(ca);
+						toClient.writeFloat(ex);
+						toClient.writeFloat(getOverallGrade(ca, ex));
 						toClient.flush();
 					}
-
-
-
-				//Get data if a match is found
-				if(id==TESTID && module.equals(MODULE)) {
-					toClient.writeInt(id);
-					toClient.writeUTF(FIRST_NAME);
-					toClient.writeUTF(LAST_NAME);
-					toClient.writeUTF(module);
-					toClient.writeFloat(CA_MARK);
-					toClient.writeFloat(EXAM_MARK);
-					toClient.writeFloat(FINAL_MARK);
-					toClient.flush();
-				} else {
+				} else{
 					toClient.writeInt(-1); // Use -1 as flag for bad entries
 					toClient.flush();
 				}
+				if (student != null)
+					student.close();
+				if (grades != null)
+					grades.close();
 			}
 		} catch (IOException | SQLException e) {
 			System.err.println(e);
-		}
+		} 
 	}
 
-	protected void finalize(){
-		try {
-			this.socket.close();
-		} catch (IOException e) {
-			System.out.println("Could not close socket");
-			System.exit(-1);
-		}
-	}
-
-	private boolean isMatch(int id, String module) throws SQLException {
-		// Initialize ResultSet
+	// Query modulegrades for student and module match
+	private ResultSet isMatch(int id, String module) throws SQLException {
+		ResultSet grades = null;
+		Statement s = null;
+		//statement object to run query on
+		s = conn.createStatement();
 		s.executeQuery("SELECT * FROM modulegrades WHERE STUD_ID='"+ id +"' and ModuleName='"+module+"'");
-		rs = s.getResultSet();
+		grades = s.getResultSet();
 
-		if(rs.next()) return true;
-		else return false;
+		if (grades.next())
+			return grades;
+		else return null;
 	}
 
+	//Query db for student
 	private ResultSet getStudent(int id) throws SQLException{
 		ResultSet student = null;
+		Statement s = null;
+		//statement object to run query on
+		s = conn.createStatement();
 		s.executeQuery("SELECT * FROM students WHERE STUD_ID="+ id);
 		student = s.getResultSet();
-		
-		return student;
+
+		if (student.next())
+			return student;
+		else return null;
 	}
-	
+
+	// Calculate the final mark
 	private float getOverallGrade(float ca, float exam) {
 		return (30.0f/100.0f * ca) + (70.0f/100.0f * exam);
 	}
@@ -149,8 +148,6 @@ public class ServerHelper extends Thread{
 						+ this.serverName + ":" 
 						+ this.portNumber + "/" 
 						+ this.dbName, connectionProps);
-		//statement object to run querys on
-		s = conn.createStatement();
 
 		return conn;
 	}

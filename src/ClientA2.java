@@ -6,7 +6,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 @SuppressWarnings("serial")
-public class Client extends JFrame implements ActionListener, WindowListener{
+public class ClientA2 extends JFrame implements ActionListener, WindowListener{
 	// Text field for receiving results
 	private JTextField jtf = new JTextField();
 	// Text area to display contents
@@ -23,13 +23,13 @@ public class Client extends JFrame implements ActionListener, WindowListener{
 
 	public static void main(String[] args) {
 		try {
-			new Client();
+			new ClientA2();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public Client() throws IOException {
+	public ClientA2() throws IOException {
 		// GUI setup
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
@@ -75,13 +75,15 @@ public class Client extends JFrame implements ActionListener, WindowListener{
 			try {
 				if(toServer != null) {
 					// Send the data to the server
-					if ((!id.getText().equals("")) && (id.getText().matches("[0-9]+")) && (!mod.getText().equals(""))){
+					if ((!id.getText().equals("")) && (id.getText().matches("[0-9]+")) 
+							&& (!mod.getText().equals("")) && (!mod.getText().matches("\\d"))){
 						toServer.writeInt(Integer.parseInt(id.getText()));
 						toServer.writeUTF(mod.getText());
 
 						int check = fromServer.readInt();
 						if(!(check== -1)) {
 							// Get values from server
+							jta.append("-------------------------------------"+"\n");
 							jta.append("Student id: " + check +"\n");
 							jta.append("First name: " + fromServer.readUTF() +"\n");
 							jta.append("Last name: " + fromServer.readUTF() +"\n");
@@ -90,30 +92,37 @@ public class Client extends JFrame implements ActionListener, WindowListener{
 							jta.append("Exam: " + fromServer.readFloat() +"\n");
 							jta.append("Final: " + fromServer.readFloat() +"\n");
 						} else {
+							jta.append("-------------------------------------"+"\n");
 							jta.append("No details found for these entries!\n");
 							break;
 						} 
 					} else {
+						jta.append("-------------------------------------"+"\n");
 						jta.append("Invalid id or Module!\n");
 						break;
 					}
 				} else {
+					jta.append("-------------------------------------"+"\n");
 					jta.append("No connection to server!\n");
 					break;
 				}
 			} catch (IOException e1) {
+				System.out.println("shakfjlfka");
 				e1.printStackTrace();
-			}
+			} 
 			break;
 		}
 	}
-	
+
 	// Close sockets and streams when closing client window.
 	@Override
 	public void windowClosing(WindowEvent e) {
 		try {
 			if(socket != null)
 				socket.close();
+			
+			fromServer.close();
+			toServer.close();
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
