@@ -76,6 +76,9 @@ public class ServerHelper extends Thread{
 						toClient.writeFloat(ex);
 						toClient.writeFloat(getOverallGrade(ca, ex));
 						toClient.flush();
+					} else {
+						toClient.writeInt(-1); // Use -1 as flag for bad entries
+						toClient.flush();
 					}
 				} else{
 					toClient.writeInt(-1); // Use -1 as flag for bad entries
